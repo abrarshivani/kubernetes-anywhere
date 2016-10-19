@@ -32,8 +32,8 @@ if phase1.cloud_provider = "azure"
 	source "phase1/azure/Kconfig"
 endif
 
-if phase1.cloud_provider = "vSphere"
-	source "phase1/vSphere/Kconfig"
+if phase1.cloud_provider = "vsphere"
+	source "phase1/vsphere/Kconfig"
 endif
 
 endmenu

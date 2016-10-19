@@ -7,11 +7,14 @@ function(config)
       tf.pki.kubeconfig_from_certs(
         user, cluster, context,
         cfg.cluster_name + "-root",
-        "https://${vsphere_virtual_machine.kube_debian1.network_interface.0.ipv4_address}",
+        "https://${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
       ));
   local config_metadata_template = std.toString(config {
-      master_ip: "${vsphere_virtual_machine.kube_debian1.network_interface.0.ipv4_address}",
+      master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
       role: "%s",
+      phase3 +: {
+        addons_config: (import "phase3/all.jsonnet")(config),
+      },
     });
   
   std.mergePatch({
@@ -37,14 +40,26 @@ function(config)
             master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
           },
         },
+        cloudprovider: {
+          template: "${file(\"vsphere.conf\")}",
+          vars: {
+            username: cfg.vSphere.username,
+            password: cfg.vSphere.password,
+            vsphere_server: cfg.vSphere.url,
+            port: cfg.vSphere.port,
+            allow_unverified_ssl: cfg.vSphere.insecure,
+            datacenter: cfg.vSphere.datacenter,
+            datastore: cfg.vSphere.datastore,
+          },
+        },
       },
     },
 
     
     resource: {
       vsphere_virtual_machine: {
-        ["kube_debian" + vm]: {
-            name: "kube_debian%d" % vm,
+        ["kubedebian" + vm]: {
+            name: "kubedebian%d" % vm,
             vcpu: 2,
             memory: 2048,
             enable_disk_uuid: true,
@@ -62,19 +77,23 @@ function(config)
       },
       null_resource: {
         myvm: {
-            depends_on: ["vsphere_virtual_machine.kube_debian1"],
+            depends_on: ["vsphere_virtual_machine.kubedebian1"],
             connection: {
               user: "kube",
               password: "kube",
-              host: "${vsphere_virtual_machine.kube_debian1.network_interface.0.ipv4_address}"
+              host: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}"
             },
             provisioner: [{
                 "remote-exec": {
                   inline: [
-                    "echo '%s' > /home/kube/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
-                    "sudo bash /home/kube/configure-vm.sh",
                     "sudo echo '%s' > /home/kube/k8s_config.json" % (config_metadata_template % "master"),
-                    "sudo cp /home/kube/k8s_config.json /etc/kubernetes/k8s_config.json "
+                    "sudo mkdir -p /etc/kubernetes/",
+                    "sleep 4; sudo cp /home/kube/k8s_config.json /etc/kubernetes/ ",
+                    "echo '%s' > /home/kube/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
+                    "sleep 2; sudo bash /home/kube/configure-vm.sh",
+                    "echo '%s' > /home/kube/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",
+                    "sudo cp /home/kube/vsphere.conf /etc/kubernetes/vsphere.conf",
+
                   ]
                 }
            }, {
@@ -85,4 +104,4 @@ function(config)
         },
       },    
     },
-  }, tf.pki.cluster_tls(cfg.cluster_name, ["%(cluster_name)s-master" % cfg], ["${vsphere_virtual_machine.kube_debian1.network_interface.0.ipv4_address}"]))
+  }, tf.pki.cluster_tls(cfg.cluster_name, ["%(cluster_name)s-master" % cfg], ["${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}"]))
