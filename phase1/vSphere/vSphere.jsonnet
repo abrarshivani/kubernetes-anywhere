@@ -1,7 +1,7 @@
 function(config)
   local tf = import "phase1/tf.jsonnet";
   local cfg = config.phase1;
-  local vms = std.makeArray(cfg.num_nodes,function(node) node+1); 
+  local vms = std.makeArray(cfg.num_nodes + 1,function(node) node+1); 
   local kubeconfig(user, cluster, context) =
     std.manifestJson(
       tf.pki.kubeconfig_from_certs(
@@ -36,8 +36,19 @@ function(config)
             root_ca_public_pem: "${base64encode(tls_self_signed_cert.%s-root.cert_pem)}" % cfg.cluster_name,
             apiserver_cert_pem: "${base64encode(tls_locally_signed_cert.%s-master.cert_pem)}" % cfg.cluster_name,
             apiserver_key_pem: "${base64encode(tls_private_key.%s-master.private_key_pem)}" % cfg.cluster_name,
-            node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
             master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
+            node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
+          },
+        },
+        configure_node: {
+          template: "${file(\"configure-vm.sh\")}",
+          vars: {
+            role: "node",
+            root_ca_public_pem: "${base64encode(tls_self_signed_cert.%s-root.cert_pem)}" % cfg.cluster_name,
+            apiserver_cert_pem: "${base64encode(tls_locally_signed_cert.%s-master.cert_pem)}" % cfg.cluster_name,
+            apiserver_key_pem: "${base64encode(tls_private_key.%s-master.private_key_pem)}" % cfg.cluster_name,
+            master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
+            node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
           },
         },
         cloudprovider: {
@@ -53,7 +64,7 @@ function(config)
           },
         },
       },
-    },
+     },
 
     
     resource: {
@@ -76,7 +87,7 @@ function(config)
         } for vm in vms
       },
       null_resource: {
-        myvm: {
+        master: {
             depends_on: ["vsphere_virtual_machine.kubedebian1"],
             connection: {
               user: "kube",
@@ -93,7 +104,6 @@ function(config)
                     "sleep 2; sudo bash /home/kube/configure-vm.sh",
                     "echo '%s' > /home/kube/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",
                     "sudo cp /home/kube/vsphere.conf /etc/kubernetes/vsphere.conf",
-
                   ]
                 }
            }, {
@@ -101,7 +111,27 @@ function(config)
               command: "echo '%s' > ./.tmp/kubeconfig.json" % kubeconfig(cfg.cluster_name + "-admin", cfg.cluster_name, cfg.cluster_name),
             },
            }],
-        },
-      },    
-    },
+        },} + {
+        ["node" + vm]: {
+            depends_on: ["vsphere_virtual_machine.kubedebian1","vsphere_virtual_machine.kubedebian%d" % vm],
+            connection: {
+              user: "kube",
+              password: "kube",
+              host: "${vsphere_virtual_machine.kubedebian%d.network_interface.0.ipv4_address}" % vm
+            },
+            provisioner: [{
+                "remote-exec": {
+                  inline: [
+                    "sudo echo '%s' > /home/kube/k8s_config.json" % (config_metadata_template % "node"),
+                    "sudo mkdir -p /etc/kubernetes/",
+                    "sleep 4; sudo cp /home/kube/k8s_config.json /etc/kubernetes/ ",
+                    "echo '%s' > /home/kube/configure-vm.sh" % "${data.template_file.configure_node.rendered}",
+                    "sleep 2; sudo bash /home/kube/configure-vm.sh",
+                    "echo '%s' > /home/kube/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",
+                    "sudo cp /home/kube/vsphere.conf /etc/kubernetes/vsphere.conf",
+                  ]
+                }
+           }],
+        } for vm in vms if vm > 1 },
+    },    
   }, tf.pki.cluster_tls(cfg.cluster_name, ["%(cluster_name)s-master" % cfg], ["${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}"]))
