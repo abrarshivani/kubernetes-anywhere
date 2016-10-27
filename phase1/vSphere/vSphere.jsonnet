@@ -38,6 +38,7 @@ function(config)
             apiserver_key_pem: "${base64encode(tls_private_key.%s-master.private_key_pem)}" % cfg.cluster_name,
             master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
             node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
+            master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}"
           },
         },
         configure_node: {
@@ -49,6 +50,7 @@ function(config)
             apiserver_key_pem: "${base64encode(tls_private_key.%s-master.private_key_pem)}" % cfg.cluster_name,
             master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
             node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
+            master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
           },
         },
         cloudprovider: {
