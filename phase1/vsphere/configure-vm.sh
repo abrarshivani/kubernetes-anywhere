@@ -1,8 +1,8 @@
 mkdir -p /srv/kubernetes
 
 if [ "${role}" == "master" ]; then
-    #wget -P /usr/local/bin/ https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl
-    #chmod 777 /usr/local/bin/kubectl
+    wget -P /usr/local/bin/ https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl
+    chmod 777 /usr/local/bin/kubectl
     wget https://github.com/coreos/etcd/releases/download/v3.0.13/etcd-v3.0.13-linux-amd64.tar.gz
     tar -xvf etcd-v3.0.13-linux-amd64.tar.gz
     cd etcd-v3.0.13-linux-amd64
@@ -51,7 +51,7 @@ EOF
   curl -sSL https://get.docker.com/ > /tmp/install-docker
   chmod +x /tmp/install-docker
   /tmp/install-docker || true
-  #systemctl start docker || true
+  systemctl start docker || true
 # end hacky workaround
 
 #Append FLANNEL_OPTS to DOCKER_OPTS
@@ -59,14 +59,14 @@ sed -i "/ExecStart/s,$, --bip="$FLANNEL_SUBNET" --mtu="$FLANNEL_MTU" ," /lib/sys
 
 sudo groupadd docker
 sudo gpasswd -a kube docker
-systemctl daemon-reload
-sudo systemctl start docker.service
+sudo systemctl daemon-reload
+sudo systemctl restart docker.service
 docker run \
   --net=host \
   -v /:/mnt/root \
   -v /run:/run \
   -v /etc/kubernetes:/etc/kubernetes \
   -v /var/lib/ignition:/usr/share/oem \
-  ashivani/k8s-ignition:v2 /bin/do_role
+  ashivani/k8s-ignition:v3 /bin/do_role
 systemctl daemon-reload
 systemctl start kubelet.service
