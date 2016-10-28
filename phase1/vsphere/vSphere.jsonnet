@@ -75,8 +75,18 @@ function(config)
 
     
     resource: {
+    vsphere_file: {
+    } + { ["kube_disk_copy" + vm]: {
+              source_datacenter: cfg.vSphere.datacenter,
+              datacenter: cfg.vSphere.datacenter,
+              source_datastore: cfg.vSphere.datastore,
+              datastore: cfg.vSphere.datastore,
+              source_file: "ISO/kube.vmdk",
+              destination_file: "kube/kube%d.vmdk/kube.vmdk" % vm,
+          }  for vm in vms },
       vsphere_virtual_machine: {
         ["kubedebian" + vm]: {
+            depends_on: ["vsphere_file.kube_disk_copy%d" % vm],
             name: "kubedebian%d" % vm,
             vcpu: 2,
             memory: 2048,
