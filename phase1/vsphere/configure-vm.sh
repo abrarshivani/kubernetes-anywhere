@@ -23,6 +23,11 @@ else
 EOF
 fi
 
+echo "${nodes_dns_mappings}" 
+echo "${nodes_dns_mappings}" >> /etc/hosts
+
+
+
 #Download & Extract flannel
 wget https://github.com/coreos/flannel/releases/download/v0.6.2/flannel-v0.6.2-linux-amd64.tar.gz
 tar -xvf flannel-v0.6.2-linux-amd64.tar.gz

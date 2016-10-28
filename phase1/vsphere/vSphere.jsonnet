@@ -2,6 +2,9 @@ function(config)
   local tf = import "phase1/tf.jsonnet";
   local cfg = config.phase1;
   local vms = std.makeArray(cfg.num_nodes + 1,function(node) node+1); 
+  local master_dependency_list = ["vsphere_virtual_machine.kubedebian%d" % vm for vm in vms];
+  local node_name_to_ip = ["${vsphere_virtual_machine.kubedebian%d.network_interface.0.ipv4_address}   kubedebian%d" % [vm,vm] for vm in vms];
+  
   local kubeconfig(user, cluster, context) =
     std.manifestJson(
       tf.pki.kubeconfig_from_certs(
@@ -38,7 +41,8 @@ function(config)
             apiserver_key_pem: "${base64encode(tls_private_key.%s-master.private_key_pem)}" % cfg.cluster_name,
             master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
             node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
-            master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}"
+            master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
+            nodes_dns_mappings: std.join("\n", node_name_to_ip),
           },
         },
         configure_node: {
@@ -51,6 +55,7 @@ function(config)
             master_kubeconfig: kubeconfig(cfg.cluster_name + "-master", "local", "service-account-context"),
             node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
             master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
+            nodes_dns_mappings: std.join("\n", node_name_to_ip),
           },
         },
         cloudprovider: {
@@ -90,7 +95,7 @@ function(config)
       },
       null_resource: {
         master: {
-            depends_on: ["vsphere_virtual_machine.kubedebian1"],
+            depends_on: master_dependency_list,
             connection: {
               user: "kube",
               password: "kube",
