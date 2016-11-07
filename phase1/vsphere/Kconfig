@@ -60,8 +60,14 @@ config phase1.vSphere.memory
 
 config phase1.vSphere.template
 	string "Template Name"
-	default 443
+	default "kubedebian"
 	help
 		Template to clone VMs from.
+
+config phase1.vSphere.flannel_net
+	string "Flannel Network"
+	default "172.1.0.0/16"
+	help
+		 IP range used for flannel overlay network.
 
 endmenu

@@ -13,7 +13,7 @@ if [ "${role}" == "master" ]; then
     # Wait for etcd to start
     while ! nc -q 1 "${master_ip}" 4000 </dev/null; do sleep 2; done                                           
     # Set network config for flannel
-    ./etcdctl --endpoints="http://0.0.0.0:4000"  set /coreos.com/network/config ' "'"'{' '"Network"'':' '"172.1.0.0/16"' '}'"'" '                                                  
+    ./etcdctl --endpoints="http://0.0.0.0:4000"  set /coreos.com/network/config ' "'"'{' '"Network"'':' '"${flannel_net}"' '}'"'" '                                                  
     ./etcdctl --endpoints="http://0.0.0.0:4000" get /coreos.com/network/config
     cd ..
     # Create certificates on master

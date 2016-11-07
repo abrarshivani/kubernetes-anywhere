@@ -45,6 +45,7 @@ function(config)
             node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
             master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
             nodes_dns_mappings: std.join("\n", node_name_to_ip),
+            flannel_net: "${cfg.vSphere.flannel_net}",
           },
         },
         configure_node: {
@@ -58,6 +59,7 @@ function(config)
             node_kubeconfig: kubeconfig(cfg.cluster_name + "-node", "local", "service-account-context"),
             master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
             nodes_dns_mappings: std.join("\n", node_name_to_ip),
+            flannel_net: "${cfg.vSphere.flannel_net}",
           },
         },
         // Populates vSphere cloudprovider config file
