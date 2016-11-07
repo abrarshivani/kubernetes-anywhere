@@ -2,7 +2,7 @@ mkdir -p /srv/kubernetes
 
 if [ "${role}" == "master" ]; then
     # Download kubectl
-    wget -P /usr/local/bin/ https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl
+    wget -P /usr/local/bin/ https://storage.googleapis.com/kubernetes-release/release/${kubernetes_version}/bin/linux/amd64/kubectl
     chmod 777 /usr/local/bin/kubectl
     # Download & Start etcd
     wget https://github.com/coreos/etcd/releases/download/v3.0.13/etcd-v3.0.13-linux-amd64.tar.gz
