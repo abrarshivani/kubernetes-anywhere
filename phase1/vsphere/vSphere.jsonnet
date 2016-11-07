@@ -12,6 +12,7 @@ function(config)
         cfg.cluster_name + "-root",
         "https://${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
       ));
+
   local config_metadata_template = std.toString(config {
       master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
       role: "%s",
@@ -21,6 +22,7 @@ function(config)
     });
   
   std.mergePatch({
+    // vSphere Configuration
     provider: {
       vsphere: {
         user: cfg.vSphere.username,
@@ -58,6 +60,7 @@ function(config)
             nodes_dns_mappings: std.join("\n", node_name_to_ip),
           },
         },
+        // Populates vSphere cloudprovider config file
         cloudprovider: {
           template: "${file(\"vsphere.conf\")}",
           vars: {
