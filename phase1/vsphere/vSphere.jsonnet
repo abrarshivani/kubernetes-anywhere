@@ -81,8 +81,8 @@ function(config)
       vsphere_virtual_machine: {
         ["kubedebian" + vm]: {
             name: "kubedebian%d" % vm,
-            vcpu: 2,
-            memory: 2048,
+            vcpu: cfg.vSphere.vcpu,
+            memory: cfg.vSphere.memory,
             enable_disk_uuid: true,
             datacenter: cfg.vSphere.datacenter,
             skip_customization: true,
@@ -92,7 +92,7 @@ function(config)
             },
 
             disk: {
-              template: "KUBEUBUNUTUDEBIAN", 
+              template: cfg.vSphere.template, 
               bootable: true,
               type: "thin",
             },

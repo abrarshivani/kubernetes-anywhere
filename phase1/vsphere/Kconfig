@@ -43,7 +43,7 @@ config phase1.vSphere.datastore
 	string "Datastore"
 	default "datastore"
 	help
-		The datastore where vms will be created.
+		The datastore where VMs will be created.
 
 config phase1.vSphere.vcpu
 	string "Number of vcpu"
@@ -58,10 +58,10 @@ config phase1.vSphere.memory
 	help
 		Memory required for VM.
 
-config phase1.vSphere.vmdk
-	string "Path to vmdk"
+config phase1.vSphere.template
+	string "Template Name"
 	default 443
 	help
-		VMDK required to boot VMs.
+		Template to clone VMs from.
 
 endmenu
