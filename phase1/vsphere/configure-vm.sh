@@ -83,6 +83,6 @@ docker run \
   -v /run:/run \
   -v /etc/kubernetes:/etc/kubernetes \
   -v /var/lib/ignition:/usr/share/oem \
-  ashivani/k8s-ignition:v3 /bin/do_role
+  "${installer_container}" /bin/do_role
 systemctl daemon-reload
 systemctl start kubelet.service

@@ -46,6 +46,7 @@ function(config)
             master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
             nodes_dns_mappings: std.join("\n", node_name_to_ip),
             flannel_net: cfg.vSphere.flannel_net,
+            installer_container: config.phase2.installer_container, 
           },
         },
         configure_node: {
@@ -60,6 +61,7 @@ function(config)
             master_ip: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}",
             nodes_dns_mappings: std.join("\n", node_name_to_ip),
             flannel_net: cfg.vSphere.flannel_net,
+            installer_container: config.phase2.installer_container,
           },
         },
         // Populates vSphere cloudprovider config file
