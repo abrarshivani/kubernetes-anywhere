@@ -25,25 +25,25 @@ config phase1.vSphere.insecure
 	string "Does host use self-signed cert"
 	default true
 	help
-		If the host uses a self-signed cert
+		If the host uses a self-signed cert.
 
 config phase1.vSphere.resourcePool
-	string "Base Virtual Machine OS Image"
-	default "canonical"
+	string "Resource pool"
+	default ""
 	help
-		The publisher of the base image used for the VirtualMachines.
+		Resource pool or cluster with access to datastore.
 
 config phase1.vSphere.datacenter
-	string "Base Virtual Machine OS Image"
+	string "Datacenter"
 	default "datacenter"
 	help
-		The offer of the base image used for the VirtualMachines.
+		The datacenter to be used by vSphere cloud provider plugin.
 
 config phase1.vSphere.datastore
-	string "Base Virtual Machine OS Image"
+	string "Datastore"
 	default "datastore"
 	help
-		The sku of the base image used for the VirtualMachines.
+		The datastore where vms will be created.
 
 config phase1.vSphere.vcpu
 	string "Number of vcpu"
@@ -56,7 +56,7 @@ config phase1.vSphere.memory
 	string "Memory required for VM"
 	default "1024"
 	help
-		Memory required for VM
+		Memory required for VM.
 
 config phase1.vSphere.vmdk
 	string "Path to vmdk"
