@@ -4,7 +4,9 @@ function(config)
   local vms = std.makeArray(cfg.num_nodes + 1,function(node) node+1); 
   local master_dependency_list = ["vsphere_virtual_machine.kubedebian%d" % vm for vm in vms];
   local node_name_to_ip = ["${vsphere_virtual_machine.kubedebian%d.network_interface.0.ipv4_address}   kubedebian%d" % [vm,vm] for vm in vms];
-  
+  local vm_username = "root";
+  local vm_password = "kubernetes";
+
   local kubeconfig(user, cluster, context) =
     std.manifestJson(
       tf.pki.kubeconfig_from_certs(
@@ -108,20 +110,17 @@ function(config)
         master: {
             depends_on: master_dependency_list,
             connection: {
-              user: "kube",
-              password: "kube",
+              user: vm_username,
+              password: vm_password,
               host: "${vsphere_virtual_machine.kubedebian1.network_interface.0.ipv4_address}"
             },
             provisioner: [{
                 "remote-exec": {
                   inline: [
-                    "sudo echo '%s' > /home/kube/k8s_config.json" % (config_metadata_template % "master"),
-                    "sudo mkdir -p /etc/kubernetes/",
-                    "sleep 4; sudo cp /home/kube/k8s_config.json /etc/kubernetes/ ",
-                    "echo '%s' > /home/kube/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
-                    "sleep 2; sudo bash /home/kube/configure-vm.sh",
-                    "echo '%s' > /home/kube/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",
-                    "sudo cp /home/kube/vsphere.conf /etc/kubernetes/vsphere.conf",
+                    "curl -o /bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.4.5/bin/linux/amd64/kubectl;  chmod 777 /bin/kubectl",
+                    "mkdir -p /etc/kubernetes/; echo '%s' > /etc/kubernetes/k8s_config.json " % (config_metadata_template % "master"),                    
+                    "echo '%s' > /etc/configure-vm.sh; bash /etc/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
+                    "echo '%s' >  /etc/kubernetes/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",            
                   ]
                 }
            }, {
@@ -133,20 +132,17 @@ function(config)
         ["node" + vm]: {
             depends_on: ["vsphere_virtual_machine.kubedebian1","vsphere_virtual_machine.kubedebian%d" % vm],
             connection: {
-              user: "kube",
-              password: "kube",
+              user: vm_username,
+              password: vm_password,
               host: "${vsphere_virtual_machine.kubedebian%d.network_interface.0.ipv4_address}" % vm
             },
             provisioner: [{
                 "remote-exec": {
                   inline: [
-                    "sudo echo '%s' > /home/kube/k8s_config.json" % (config_metadata_template % "node"),
-                    "sudo mkdir -p /etc/kubernetes/",
-                    "sleep 4; sudo cp /home/kube/k8s_config.json /etc/kubernetes/ ",
-                    "echo '%s' > /home/kube/configure-vm.sh" % "${data.template_file.configure_node.rendered}",
-                    "sleep 2; sudo bash /home/kube/configure-vm.sh",
-                    "echo '%s' > /home/kube/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",
-                    "sudo cp /home/kube/vsphere.conf /etc/kubernetes/vsphere.conf",
+                    "mkdir -p /etc/kubernetes/; echo '%s' > /etc/kubernetes/k8s_config.json " % (config_metadata_template % "node"),                    
+                    "echo '%s' > /etc/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
+                    "sleep 1; bash /etc/configure-vm.sh",
+                    "echo '%s' >  /etc/kubernetes/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",            
                   ]
                 }
            }],
