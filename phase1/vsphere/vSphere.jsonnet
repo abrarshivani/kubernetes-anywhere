@@ -117,9 +117,9 @@ function(config)
             provisioner: [{
                 "remote-exec": {
                   inline: [
-                    "curl -o /bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.4.5/bin/linux/amd64/kubectl;  chmod 777 /bin/kubectl",
                     "mkdir -p /etc/kubernetes/; echo '%s' > /etc/kubernetes/k8s_config.json " % (config_metadata_template % "master"),                    
-                    "echo '%s' > /etc/configure-vm.sh; bash /etc/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
+                    "echo '%s' > /etc/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
+                    "sleep 4; bash /etc/configure-vm.sh",
                     "echo '%s' >  /etc/kubernetes/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",            
                   ]
                 }
@@ -141,7 +141,7 @@ function(config)
                   inline: [
                     "mkdir -p /etc/kubernetes/; echo '%s' > /etc/kubernetes/k8s_config.json " % (config_metadata_template % "node"),                    
                     "echo '%s' > /etc/configure-vm.sh" % "${data.template_file.configure_master.rendered}",
-                    "sleep 1; bash /etc/configure-vm.sh",
+                    "sleep 4; bash /etc/configure-vm.sh",
                     "echo '%s' >  /etc/kubernetes/vsphere.conf" % "${data.template_file.cloudprovider.rendered}",            
                   ]
                 }

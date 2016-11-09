@@ -7,6 +7,9 @@ EOF
 
 
 if [ "${role}" == "master" ]; then
+    # Download kubectl
+    curl -o /bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.4.5/bin/linux/amd64/kubectl
+    chmod 777 /bin/kubectl
     # Download & Start etcd
     systemctl enable etcd
     # TODO: Setup etcd as systemd unit
