@@ -10,9 +10,6 @@ EOF
 
 
 if [ "${role}" == "master" ]; then
-    # Download kubectl
-    curl -o /bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${kubernetes_version}/bin/linux/amd64/kubectl
-    chmod 777 /bin/kubectl
     # Download & Start etcd
     systemctl enable etcd
     systemctl start etcd
@@ -51,3 +48,9 @@ docker run \
 systemctl daemon-reload
 systemctl enable kubelet
 systemctl start kubelet
+
+if [ "${role}" == "master" ]; then
+    # Download kubectl
+    curl -o /bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${kubernetes_version}/bin/linux/amd64/kubectl
+    chmod 777 /bin/kubectl
+fi

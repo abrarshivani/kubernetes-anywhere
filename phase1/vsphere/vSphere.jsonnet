@@ -3,7 +3,7 @@ function(config)
   local cfg = config.phase1;
   local vms = std.makeArray(cfg.num_nodes + 1,function(node) node+1); 
   local master_dependency_list = ["vsphere_virtual_machine.kubedebian%d" % vm for vm in vms];
-  local node_name_to_ip = ["${vsphere_virtual_machine.kubedebian%d.network_interface.0.ipv4_address}   kubedebian%d" % [vm,vm] for vm in vms];
+  local node_name_to_ip = [("${vsphere_virtual_machine.kubedebian%d.network_interface.0.ipv4_address} %s"  % [vm, (if vm == 1 then "master" else "node%d" % (vm-1) )])  for vm in vms];
   local vm_username = "root";
   local vm_password = "kubernetes";
 
@@ -79,6 +79,7 @@ function(config)
             allow_unverified_ssl: cfg.vSphere.insecure,
             datacenter: cfg.vSphere.datacenter,
             datastore: cfg.vSphere.datastore,
+            working_dir: cfg.cluster_name,
           },
         },
       },
@@ -94,7 +95,7 @@ function(config)
       },
       vsphere_virtual_machine: {
         ["kubedebian" + vm]: {
-            name: "kubedebian%d" % vm,
+            name: (if vm == 1 then "master" else ("node%d" % (vm-1))),
             vcpu: cfg.vSphere.vcpu,
             memory: cfg.vSphere.memory,
             enable_disk_uuid: true,
