@@ -1,8 +1,11 @@
 mkdir -p /srv/kubernetes
 
+vm_ip=$(ip addr | grep' "'"'state UP'"'" '-A2 | tail -n1 | awk' "'"'{print $2}'"'" '| cut -f1  -d'"'"/"'"')
+
 cat << EOF > "/etc/default/flannel"
 NETWORK=${flannel_net}
 ETCD_ENDPOINTS=http://${master_ip}:4000
+IFace=$vm_ip
 EOF
 
 
