@@ -86,6 +86,12 @@ function(config)
 
     
     resource: {
+      "vsphere_folder":{
+        "cluster_folder": {
+          datacenter: cfg.vSphere.datacenter, 
+          path: cfg.cluster_name,
+        },
+      },
       vsphere_virtual_machine: {
         ["kubedebian" + vm]: {
             name: "kubedebian%d" % vm,
@@ -94,7 +100,7 @@ function(config)
             enable_disk_uuid: true,
             datacenter: cfg.vSphere.datacenter,
             skip_customization: true,
-
+            folder: "${vsphere_folder.cluster_folder.path}",
             network_interface: {
               label: "VM Network",
             },
